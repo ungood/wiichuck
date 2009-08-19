@@ -1,9 +1,6 @@
 #include "WProgram.h"
 #include "Wiichuck.h"
-
-void Wiichuck::init() {
-	init(17, 16);
-}
+#include <Wire.h>
 
 void Wiichuck::init(int powerPin, int groundPin) {
 	// Set the output pins to VCC and GND
@@ -24,14 +21,19 @@ void Wiichuck::init(int powerPin, int groundPin) {
 	Wire.send(0x40);
 	Wire.send(0x00);
 	Wire.endTransmission();
+	
+	// Set default calibration
+	calib.joyX = calib.joyY = 128;
+	calib.accelX = calib.accelY = calib.accelZ = 125; // accel and lsb together == 500.
+	calib.lsbX = calib.lsbY = calib.lsbZ = 0;
 }
 
-boolean Wiichuck::poll() {
+uint8_t Wiichuck::poll() {
 	Wire.requestFrom(Address, 6);// request data from nunchuck
       
 	int bytes = 0;
 	while(Wire.available() && bytes < 6) {
-		// receive byte as an integer
+		// receive uint8_t as an integer
 		data.buffer[bytes++] = decode(Wire.receive());
 	}
       
@@ -44,24 +46,14 @@ boolean Wiichuck::poll() {
 	return bytes >= 5;
 }
 
-void Wiichuck::print() {
-	Serial.print("joy:");
-	Serial.print(joyX(), DEC);
-	Serial.print(",");
-	Serial.print(joyY(), DEC);
-	Serial.print("  \t");
-	
-	Serial.print("acc:");
-	Serial.print(accelX(), DEC);
-	Serial.print(",");
-	Serial.print(accelY(), DEC);
-	Serial.print(",");
-	Serial.print(accelZ(), DEC);
-	Serial.print("  \t");
-	
-	Serial.print("but:");
-	Serial.print(buttonZ() ? "X" : "O");
-	Serial.print(",");
-	Serial.println(buttonC() ? "X" : "O");
+void Wiichuck::calibrate() {
+	calib.joyX = data.parsed.joyX;
+	calib.joyY = data.parsed.joyY;
+	calib.accelX = data.parsed.accelX;
+	calib.accelY = data.parsed.accelY;
+	calib.accelZ = data.parsed.accelZ;
+	calib.lsbX = data.parsed.lsbX;
+	calib.lsbY = data.parsed.lsbY;
+	calib.lsbZ = data.parsed.lsbZ;
 }
 
