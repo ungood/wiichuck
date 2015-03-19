@@ -1,0 +1,1 @@
+Yes, I know others have already done this.  I didn't like any of them, so I created my own.  That's what programmers do, right?
